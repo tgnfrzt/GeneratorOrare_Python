@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DualSchedule Builder • Generator Orar ACS & FSA</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- TOP NAVIGATION -->
+        <header class="top-nav">
+            <div class="brand">
+                <div class="brand-icon">⚡</div>
+                <div>
+                    <h1 class="brand-title">DualSchedule Builder</h1>
+                    <p class="brand-subtitle">Generator & Optimizer Orar Dual Universitar</p>
+                </div>
+            </div>
+
+            <div class="stats-bar">
+                <div class="stat-pill" id="totalClassesPill">
+                    <span class="stat-num" id="totalClassesCount">0</span>
+                    <span class="stat-label">Ore Salvate</span>
+                </div>
+                <div class="stat-pill danger" id="conflictPill">
+                    <span class="stat-num" id="conflictsCount">0</span>
+                    <span class="stat-label">Suprapuneri</span>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <button class="btn btn-primary" id="btnSyncCloud" title="Sincronizează instantaneu pe serverul cloud (Zabala.pythonanywhere.com) pentru telefon">
+                    <span>☁️</span> Sincronizează în Cloud
+                </button>
+                <button class="btn btn-primary" id="btnExportAndroid" title="Exportă direct în assets-ul aplicației Android">
+                    <span>📱</span> Sincronizează în Android
+                </button>
+                <button class="btn btn-secondary" id="btnImportJson" title="Încarcă un fișier orar.json de pe calculator">
+                    <span>📤</span> Încarcă JSON
+                </button>
+                <input type="file" id="jsonFileInput" accept=".json" style="display:none">
+                <button class="btn btn-secondary" id="btnDownloadJson" title="Descarcă orar.json">
+                    <span>📥</span> Descarcă JSON
+                </button>
+                <button class="btn btn-secondary" id="btnExportIcs" title="Exportă orarul ca fișier iCalendar .ics pentru Google Calendar sau telefon">
+                    <span>📅</span> Exportă .ICS
+                </button>
+                <button class="btn btn-secondary" id="btnPrintSchedule" title="Imprimă orarul sau salvează ca PDF">
+                    <span>🖨️</span> PDF / Print
+                </button>
+                <button class="btn btn-secondary" id="btnCampusGuide" title="Ghid săli și corpuri UPB (PR, BN, ED, EG, EC, Leu)">
+                    <span>📍</span> Ghid Săli
+                </button>
+                <button class="btn btn-secondary" id="btnLoadReference" title="Încarcă orarul inițial transcris din poze (ACS + FSA)">
+                    <span>🔄</span> Încarcă Referință
+                </button>
+                <button class="btn btn-outline-danger" id="btnClearAll" title="Șterge toate orele pentru a începe de la zero">
+                    <span>🗑️</span> Golește Tot
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT AREA: TWO COLUMNS -->
+        <main class="main-layout">
+            <!-- LEFT PANEL: FAST INPUT FORM -->
+            <section class="card form-panel">
+                <div class="card-header">
+                    <h2 class="card-title" id="formHeaderTitle">➕ Adăugare Rapidă Oră</h2>
+                    <span class="badge badge-accent">Introducere Rapidă</span>
+                </div>
+
+                <form id="scheduleForm" onsubmit="return false;">
+                    <!-- FACULTY SELECTOR (STICKY) -->
+                    <div class="form-group">
+                        <label class="form-label">1. Alege Facultatea (Rămâne memorată)</label>
+                        <div class="faculty-picker">
+                            <button type="button" class="faculty-btn active" data-faculty="ACS" id="facultyAcs">
+                                <span class="dot dot-acs"></span> ACS (Automatică)
+                            </button>
+                            <button type="button" class="faculty-btn" data-faculty="FSA" id="facultyFsa">
+                                <span class="dot dot-fsa"></span> FSA (Științe Aplicate)
+                            </button>
+                            <button type="button" class="faculty-btn" data-faculty="OPT" id="facultyOpt">
+                                <span class="dot dot-opt"></span> Opțional
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- DAY SELECTOR -->
+                    <div class="form-group">
+                        <label class="form-label">2. Ziua din Săptămână</label>
+                        <div class="pill-group" id="dayPicker">
+                            <button type="button" class="pill-btn active" data-day="1">Luni</button>
+                            <button type="button" class="pill-btn" data-day="2">Marți</button>
+                            <button type="button" class="pill-btn" data-day="3">Miercuri</button>
+                            <button type="button" class="pill-btn" data-day="4">Joi</button>
+                            <button type="button" class="pill-btn" data-day="5">Vineri</button>
+                        </div>
+                    </div>
+
+                    <!-- TIME SLOT SELECTOR -->
+                    <div class="form-group">
+                        <label class="form-label">3. Interval Orar (2 ore universitare)</label>
+                        <div class="time-grid" id="timeSlotPicker">
+                            <button type="button" class="time-btn active" data-start="08:00" data-end="10:00">08:00 - 10:00</button>
+                            <button type="button" class="time-btn" data-start="10:00" data-end="12:00">10:00 - 12:00</button>
+                            <button type="button" class="time-btn" data-start="12:00" data-end="14:00">12:00 - 14:00</button>
+                            <button type="button" class="time-btn" data-start="14:00" data-end="16:00">14:00 - 16:00</button>
+                            <button type="button" class="time-btn" data-start="16:00" data-end="18:00">16:00 - 18:00</button>
+                            <button type="button" class="time-btn" data-start="18:00" data-end="20:00">18:00 - 20:00</button>
+                        </div>
+                    </div>
+
+                    <!-- DISCIPLINE & TYPE -->
+                    <div class="form-row">
+                        <div class="form-group flex-2">
+                            <label class="form-label" for="disciplineInput">4. Denumire Materie</label>
+                            <input type="text" id="disciplineInput" class="form-input" placeholder="ex: ALGAED, PCLP 1, USO, LMC" required list="disciplineSuggestions" autocomplete="off">
+                            <datalist id="disciplineSuggestions">
+                                <option value="ALGAED">
+                                <option value="Analiză Matematică">
+                                <option value="PCLP 1">
+                                <option value="USO">
+                                <option value="Programarea Calculatoarelor">
+                                <option value="LMC">
+                                <option value="ASC">
+                                <option value="FP">
+                                <option value="Tehnici de Comunicare">
+                                <option value="Educație Fizică (Sport)">
+                                <option value="Engleză">
+                            </datalist>
+                        </div>
+
+                        <div class="form-group flex-1">
+                            <label class="form-label" for="roomInput">5. Sala</label>
+                            <input type="text" id="roomInput" class="form-input" placeholder="ex: PR 001, BN504, ED302" required>
+                        </div>
+                    </div>
+
+                    <!-- TYPE (C / S / L / Sport / Opt) -->
+                    <div class="form-group">
+                        <label class="form-label">6. Tipul Activității</label>
+                        <div class="type-picker" id="typePicker">
+                            <button type="button" class="type-btn" data-type="curs">
+                                <span class="badge-tag">C</span> Curs
+                            </button>
+                            <button type="button" class="type-btn" data-type="seminar">
+                                <span class="badge-tag">S</span> Seminar
+                            </button>
+                            <button type="button" class="type-btn active" data-type="laborator">
+                                <span class="badge-tag">L</span> Laborator
+                            </button>
+                            <button type="button" class="type-btn" data-type="sport">
+                                <span class="badge-tag">⚽</span> Sport
+                            </button>
+                            <button type="button" class="type-btn" data-type="optional">
+                                <span class="badge-tag">💡</span> Opțional
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- PARITY SELECTOR -->
+                    <div class="form-group">
+                        <label class="form-label">7. Frecvență Săptămâni</label>
+                        <div class="pill-group" id="parityPicker">
+                            <button type="button" class="pill-btn active" data-parity="toate">În fiecare săptămână</button>
+                            <button type="button" class="pill-btn" data-parity="par">Doar Pară</button>
+                            <button type="button" class="pill-btn" data-parity="impar">Doar Impară</button>
+                        </div>
+                    </div>
+
+                    <!-- MANDATORY & NOTES -->
+                    <div class="form-row align-center">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="mandatoryCheck" checked>
+                            <span class="custom-checkbox"></span>
+                            <span>Prezență Obligatorie</span>
+                        </label>
+
+                        <div class="form-group flex-1" style="margin-bottom: 0;">
+                            <input type="text" id="notesInput" class="form-input" placeholder="Notițe (ex: Grupa 1313B, Prezență ACS, etc.)">
+                        </div>
+                    </div>
+
+                    <!-- SUBMIT ACTIONS -->
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary btn-block" id="btnAddClass">
+                            <span>➕</span> Salvează Ora
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-block" id="btnAddAndNext">
+                            <span>⏩</span> Salvează & Treci la Următoarea Oră
+                        </button>
+                        <button type="button" class="btn btn-outline" id="btnCancelEdit" style="display: none;">
+                            Anulează Editarea
+                        </button>
+                    </div>
+
+                    <!-- KEYBOARD SHORTCUTS HINT -->
+                    <div class="shortcuts-hint">
+                        <span class="hint-icon">💡</span>
+                        <span><b>Taste rapide:</b> Apasă <kbd>Enter</kbd> în câmpul de materie pentru a salva și a trece la următorul interval orar!</span>
+                    </div>
+                </form>
+            </section>
+
+            <!-- RIGHT PANEL: INTERACTIVE TIMETABLE GRID -->
+            <section class="card grid-panel">
+                <div class="card-header">
+                    <div class="grid-controls">
+                        <h2 class="card-title">📅 Tabel Săptămânal Interactiv</h2>
+                        <div class="view-toggle">
+                            <button class="view-btn active" data-view="par" id="viewParBtn">🔵 Săptămâna Pară</button>
+                            <button class="view-btn" data-view="impar" id="viewImparBtn">🟠 Săptămâna Impară</button>
+                            <button class="view-btn" data-view="toate" id="viewAllBtn">👁️ Toate / Suprapus</button>
+                        </div>
+                    </div>
+
+                    <div class="legend">
+                        <span class="legend-item"><span class="legend-dot acs"></span> ACS</span>
+                        <span class="legend-item"><span class="legend-dot fsa"></span> FSA</span>
+                        <span class="legend-item"><span class="legend-dot conflict"></span> Suprapus</span>
+                        <span class="legend-item"><span class="legend-dot free"></span> Fereastră Liberă</span>
+                    </div>
+                </div>
+
+                <!-- TIMETABLE GRID -->
+                <div class="schedule-grid-container">
+                    <table class="schedule-table" id="scheduleTable">
+                        <thead>
+                            <tr>
+                                <th class="time-col-header">Interval</th>
+                                <th>Luni</th>
+                                <th>Marți</th>
+                                <th>Miercuri</th>
+                                <th>Joi</th>
+                                <th>Vineri</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scheduleTableBody">
+                            <!-- Populat dinamic prin JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL REORGANIZARE / MUTARE ORĂ -->
+    <div class="modal-overlay" id="moveModalOverlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title">🔄 Rezolvă Conflictul / Mută Ora</h3>
+                <button class="modal-close" id="btnCloseModal">&times;</button>
+            </div>
+            <div class="modal-body" id="moveModalBody">
+                <!-- Continut dinamic -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL GHID SALI CAMPUS UPB -->
+    <div class="modal-overlay" id="campusModalOverlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title">📍 Ghid Clădiri & Săli UPB</h3>
+                <button class="modal-close" id="btnCloseCampusModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="campus-guide-grid">
+                    <div class="campus-item">
+                        <span class="badge tag-acs">PR</span>
+                        <div class="campus-desc">
+                            <b>Palatul Rectoratului (Campus Noul Local)</b>
+                            <p>Săli mari amfiteatru (PR 001, PR 003, PR 106, PR 103b) - Lângă intrarea principală.</p>
+                        </div>
+                    </div>
+                    <div class="campus-item">
+                        <span class="badge tag-fsa">BN</span>
+                        <div class="campus-desc">
+                            <b>Corp BN (Facultatea de Științe Aplicate)</b>
+                            <p>Săli BN504, BN122b, BN113 - Clădirea mare din centrul campusului Politehnica.</p>
+                        </div>
+                    </div>
+                    <div class="campus-item">
+                        <span class="badge tag-opt">ED / EG / EC</span>
+                        <div class="campus-desc">
+                            <b>Corpuri Electro / Energetică / Electronică</b>
+                            <p>Laboratoare PCLP, USO, PL (EG 105, EG 306, EG 311, ED 020, ED 302, EC 105).</p>
+                        </div>
+                    </div>
+                    <div class="campus-item">
+                        <span class="badge tag-acs">AN</span>
+                        <div class="campus-desc">
+                            <b>Corp AN (Amfiteatre Noi)</b>
+                            <p>Amfiteatre și săli seminar (AN 034, AN 210, AN 220) - Lângă Rectorat.</p>
+                        </div>
+                    </div>
+                    <div class="campus-item">
+                        <span class="badge tag-opt">Leu</span>
+                        <div class="campus-desc">
+                            <b>Complex Leu (Bd. Iuliu Maniu)</b>
+                            <p>Amfiteatrul Leu A02 - Campus separat (metrou Politehnica / Leu).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div class="toast" id="toastMessage"></div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
