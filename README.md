@@ -52,8 +52,12 @@ Aplicația oferă o interfață rapidă de introducere a cursurilor, detectează
 ## 🚀 Rulare și Utilizare
 
 ### Metoda 1: Rulare Rapidă (Fără setări manuale)
-1. Fă dublu-click pe **`start.bat`**.
-2. Scriptul va verifica existența Python, va instala automat pachetele necesare (`Flask`, `flask-cors`) și va deschide browserul la adresa:
+1. Descarcă sau clonează depozitul:
+   ```bash
+   git clone https://github.com/tgnfrzt/GeneratorOrare_Python.git
+   ```
+2. Fă dublu-click pe **`start.bat`**.
+3. Scriptul va verifica existența Python, va instala automat pachetele necesare (`Flask`, `flask-cors`) și va deschide browserul la adresa:
    `http://127.0.0.1:5000`
 
 ### Metoda 2: Rulare Manuală din Consolă
